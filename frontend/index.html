@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Based Pothole Detection & Mapping</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">SMART ROAD SAFETY DASHBOARD</p>
+      <h1>AI-Based Pothole Detection &amp; Mapping</h1>
+      <p class="subtitle">A prototype dashboard that uses sensor data and dashcam video to simulate pothole detection and mapping.</p>
+    </div>
+    <span class="demo-badge">● Demo mode: sample data</span>
+  </header>
+  <main class="container">
+    <section class="summary-grid" aria-label="Detection summary">
+      <article class="summary-card"><span>Total potholes</span><strong id="totalPotholes">4</strong><small>sample records</small></article>
+      <article class="summary-card high-card"><span>High severity</span><strong id="highPotholes">1</strong><small>needs attention</small></article>
+      <article class="summary-card medium-card"><span>Medium severity</span><strong id="mediumPotholes">2</strong><small>plan inspection</small></article>
+      <article class="summary-card low-card"><span>Low severity</span><strong id="lowPotholes">1</strong><small>monitor condition</small></article>
+    </section>
+    <section class="dashboard-grid">
+      <article class="panel sensor-panel">
+        <div class="section-title"><span class="icon">⌁</span><div><h2>Sensor Input</h2><p>Enter sample accelerometer and gyroscope values.</p></div></div>
+        <form id="sensorForm">
+          <div class="input-grid">
+            <label>Acceleration X (m/s²)<input type="number" step="0.01" id="accX" value="1.20" required /></label><label>Acceleration Y (m/s²)<input type="number" step="0.01" id="accY" value="-0.50" required /></label><label>Acceleration Z (m/s²)<input type="number" step="0.01" id="accZ" value="9.81" required /></label>
+            <label>Gyroscope X (°/s)<input type="number" step="0.01" id="gyroX" value="0.30" required /></label><label>Gyroscope Y (°/s)<input type="number" step="0.01" id="gyroY" value="1.40" required /></label><label>Gyroscope Z (°/s)<input type="number" step="0.01" id="gyroZ" value="0.20" required /></label>
+          </div>
+          <button type="submit" class="primary-button">Analyze Sensor Data</button>
+        </form>
+        <p class="helper-text"><strong>Demo/Prototype Logic:</strong> impact and severity are calculated from the entered acceleration values. This is not a real ML prediction.</p>
+      </article>
+      <article class="panel video-panel">
+        <div class="section-title"><span class="icon">▸</span><div><h2>Dashcam Video</h2><p>Upload a video for a simulated detection result.</p></div></div>
+        <label class="upload-box" for="videoInput"><span>Choose dashcam video</span><small>MP4, WebM, or MOV</small><input id="videoInput" type="file" accept="video/mp4,video/webm,video/quicktime" /></label>
+        <video id="videoPlayer" controls hidden></video>
+        <p id="videoStatus" class="video-status">No video selected yet.</p>
+        <p id="videoDuration" class="video-status" hidden></p>
+        <button type="button" id="detectVideoBtn" class="secondary-button" disabled>Detect Potholes</button>
+        <p class="helper-text">Detection is simulated with sample results; no computer-vision model runs here.</p>
+        <section id="videoDetectionResults" class="video-results" hidden aria-live="polite">
+          <div class="demo-result-label">Demo ML Result — simulated data only</div>
+          <h3>Video Detection Results</h3>
+          <p class="video-result-note">This prototype does not analyze the uploaded video. A future backend API and ML model will replace these sample results.</p>
+          <div id="videoDetectionList"></div>
+        </section>
+      </article>
+    </section>
+    <section class="dashboard-grid result-grid">
+      <article class="panel result-panel">
+        <div class="section-title"><span class="icon">✓</span><div><h2>Detection Result</h2><p>Latest simulated analysis.</p></div></div>
+        <div class="result-banner" id="resultBanner"><span class="result-dot"></span><strong id="detectionStatus">Pothole detected</strong></div>
+        <dl class="result-list"><div><dt>Acceleration magnitude</dt><dd id="accelerationMagnitude">9.90 m/s²</dd></div><div><dt>Detection confidence</dt><dd id="confidence">92%</dd></div><div><dt>Severity</dt><dd><span id="severity" class="severity high">High</span></dd></div><div><dt>Impact intensity</dt><dd id="impactResult">7.6 / 10</dd></div><div><dt>Sample latitude</dt><dd id="resultLatitude">12.9716</dd></div><div><dt>Sample longitude</dt><dd id="resultLongitude">77.5946</dd></div></dl>
+      </article>
+      <article class="panel location-panel">
+        <div class="section-title"><span class="icon">⌖</span><div><h2>Location</h2><p>Sample GPS point for the selected detection.</p></div></div>
+        <dl class="result-list"><div><dt>Latitude</dt><dd id="latitude">12.9716</dd></div><div><dt>Longitude</dt><dd id="longitude">77.5946</dd></div><div><dt>Location status</dt><dd><span class="location-status">● Sample location active</span></dd></div></dl>
+      </article>
+    </section>
+    <section class="panel map-panel"><div class="section-title"><span class="icon">◉</span><div><h2>Interactive Pothole Map</h2><p>Click the marker to view the detected pothole details.</p></div></div><div id="map" aria-label="Interactive pothole location map"></div></section>
+    <section class="panel history-panel"><div class="section-title"><span class="icon">≡</span><div><h2>Detection History</h2><p>Sample records from the prototype dashboard.</p></div></div><div class="table-wrap"><table><thead><tr><th>Pothole ID</th><th>Date/Time</th><th>Severity</th><th>Intensity</th><th>Latitude</th><th>Longitude</th><th>Confidence</th></tr></thead><tbody id="historyBody"></tbody></table></div></section>
+  </main>
+  <footer>Frontend prototype • Ready to connect to a backend API later</footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="script.js"></script>
+</body>
+</html>
