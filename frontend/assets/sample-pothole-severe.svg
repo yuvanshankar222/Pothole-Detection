@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="severeTitle">
+  <title id="severeTitle">Severe Pothole on Highway</title>
+  <defs>
+    <radialGradient id="craterDark" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0a0d10"/>
+      <stop offset="50%" stop-color="#192026"/>
+      <stop offset="85%" stop-color="#2c363e"/>
+      <stop offset="100%" stop-color="#414d56"/>
+    </radialGradient>
+    <linearGradient id="roadSurf" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3d4750"/>
+      <stop offset="100%" stop-color="#55616b"/>
+    </linearGradient>
+    <pattern id="grain" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="4" r="1" fill="#2d353c" opacity="0.6"/>
+      <circle cx="12" cy="8" r="1.5" fill="#697682" opacity="0.4"/>
+      <circle cx="7" cy="16" r="1.2" fill="#20262b" opacity="0.5"/>
+      <circle cx="17" cy="14" r="0.8" fill="#7a8894" opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- Road Base -->
+  <rect width="800" height="450" fill="url(#roadSurf)"/>
+  <rect width="800" height="450" fill="url(#grain)"/>
+
+  <!-- Highway Lane Markings -->
+  <path d="M0 60 L800 60" stroke="#ffffff" stroke-width="8" stroke-dasharray="80 50" opacity="0.85"/>
+  <path d="M0 390 L800 390" stroke="#f4c430" stroke-width="10" stroke-dasharray="100 40" opacity="0.9"/>
+  <path d="M0 405 L800 405" stroke="#f4c430" stroke-width="10" stroke-dasharray="100 40" opacity="0.9"/>
+
+  <!-- Pothole Fractures and Outer Lip -->
+  <path d="M 280 200 Q 320 160 410 170 Q 520 180 560 220 Q 590 270 530 310 Q 420 340 330 320 Q 260 290 270 230 Z" fill="#263038" stroke="#1c2329" stroke-width="6"/>
+
+  <!-- Deep Crater -->
+  <path d="M 300 215 Q 340 185 415 190 Q 500 200 535 235 Q 560 280 505 305 Q 410 328 340 310 Q 285 285 300 215 Z" fill="url(#craterDark)"/>
+
+  <!-- Internal Shadow & Aggregate Rubble -->
+  <ellipse cx="420" cy="255" rx="85" ry="35" fill="#0d1114"/>
+  <circle cx="370" cy="275" r="7" fill="#606c76"/>
+  <circle cx="460" cy="285" r="9" fill="#525d66"/>
+  <circle cx="410" cy="295" r="5" fill="#717e89"/>
+  <circle cx="340" cy="260" r="6" fill="#4d5760"/>
+  <circle cx="495" cy="265" r="8" fill="#5b6670"/>
+
+  <!-- Crack Extensions -->
+  <path d="M 270 230 L 220 225 L 180 240 L 140 235" stroke="#1e252c" stroke-width="3" fill="none"/>
+  <path d="M 560 220 L 610 210 L 660 225 L 700 215" stroke="#1e252c" stroke-width="3.5" fill="none"/>
+  <path d="M 420 340 L 435 380 L 415 410" stroke="#1e252c" stroke-width="2.5" fill="none"/>
+  <path d="M 320 165 L 305 130 L 325 95" stroke="#1e252c" stroke-width="2.5" fill="none"/>
+
+  <text x="400" y="435" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#ffffff" opacity="0.85">High Severity Cavity (Sample Road Inspection 01)</text>
+</svg>

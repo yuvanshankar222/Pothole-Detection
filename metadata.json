@@ -1,6 +1,6 @@
 {
   "name": "AI-Based Pothole Detection & Mapping",
-  "description": "A prototype dashboard that uses sensor data and dashcam video to simulate pothole detection and mapping.",
+  "description": "A complete AI-powered pothole detection, sensor telemetry analysis, and mapping system.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

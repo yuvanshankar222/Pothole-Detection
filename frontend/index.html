@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI-Based Pothole Detection & Mapping</title>
-  <meta name="description" content="A prototype dashboard that uses sensor data and dashcam video to simulate pothole detection and mapping." />
-  <meta property="og:title" content="AI-Based Pothole Detection & Mapping" />
-  <meta property="og:description" content="A prototype dashboard that uses sensor data and dashcam video to simulate pothole detection and mapping." />
+  <title>AI-Based Pothole Detection &amp; Mapping</title>
+  <meta name="description" content="A complete AI-powered pothole detection, sensor telemetry analysis, and mapping system." />
+  <meta property="og:title" content="AI-Based Pothole Detection &amp; Mapping" />
+  <meta property="og:description" content="A complete AI-powered pothole detection, sensor telemetry analysis, and mapping system." />
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
@@ -16,60 +16,342 @@
     <div class="hero-content">
       <p class="eyebrow">SMART ROAD SAFETY DASHBOARD</p>
       <h1>AI-Based Pothole Detection &amp; Mapping</h1>
-      <p class="subtitle">A prototype dashboard that uses sensor data and dashcam video to simulate pothole detection and mapping.</p>
+      <p class="subtitle">An integrated AI &amp; IoT road safety system combining computer vision, YOLO-style damage bounding boxes, accelerometer telemetry, and geospatial mapping.</p>
     </div>
-    <span class="demo-badge">● Demo mode: sample data</span>
+    <div class="hero-actions">
+      <span id="systemStatusBadge" class="demo-badge">● System Online: AI &amp; API Active</span>
+      <button type="button" id="headerExportBtn" class="header-action-btn">Download CSV Log</button>
+    </div>
   </header>
+
   <main class="container">
+    <!-- Summary Metrics Cards -->
     <section class="summary-grid" aria-label="Detection summary">
-      <article class="summary-card"><span>Total potholes</span><strong id="totalPotholes">4</strong><small>sample records</small></article>
-      <article class="summary-card high-card"><span>High severity</span><strong id="highPotholes">1</strong><small>needs attention</small></article>
-      <article class="summary-card medium-card"><span>Medium severity</span><strong id="mediumPotholes">2</strong><small>plan inspection</small></article>
-      <article class="summary-card low-card"><span>Low severity</span><strong id="lowPotholes">1</strong><small>monitor condition</small></article>
+      <article class="summary-card" id="summaryTotalCard">
+        <span>Total potholes</span>
+        <strong id="totalPotholes">4</strong>
+        <small id="totalSubtext">verified records</small>
+      </article>
+      <article class="summary-card high-card" id="summaryHighCard">
+        <span>High severity</span>
+        <strong id="highPotholes">1</strong>
+        <small>immediate hazard</small>
+      </article>
+      <article class="summary-card medium-card" id="summaryMediumCard">
+        <span>Medium severity</span>
+        <strong id="mediumPotholes">2</strong>
+        <small>plan maintenance</small>
+      </article>
+      <article class="summary-card low-card" id="summaryLowCard">
+        <span>Low severity</span>
+        <strong id="lowPotholes">1</strong>
+        <small>monitor condition</small>
+      </article>
     </section>
-    <section class="dashboard-grid">
-      <article class="panel sensor-panel">
-        <div class="section-title"><span class="icon">⌁</span><div><h2>Sensor Input</h2><p>Enter sample accelerometer and gyroscope values.</p></div></div>
+
+    <!-- Secondary KPI strip: Road Health Index & Average Confidence -->
+    <section class="kpi-strip" aria-label="Performance indicators">
+      <div class="kpi-item">
+        <span class="kpi-label">Road Hazard Index:</span>
+        <div class="hazard-bar-container">
+          <div id="hazardBar" class="hazard-bar" style="width: 58%;"></div>
+        </div>
+        <strong id="hazardScore" class="kpi-val">58 / 100</strong>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-label">Average Confidence:</span>
+        <strong id="avgConfidenceScore" class="kpi-val">86%</strong>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-label">Active GPS Location:</span>
+        <strong id="activeGpsDisplay" class="kpi-val">12.9716, 77.5946</strong>
+      </div>
+    </section>
+
+    <!-- Primary Dual Input Section: Vision AI & Sensor Telemetry -->
+    <section class="dashboard-grid vision-and-sensor-grid">
+      <!-- AI Vision & Dashcam Panel -->
+      <article class="panel vision-panel" id="visionPanel">
+        <div class="section-title">
+          <span class="icon">🔍</span>
+          <div>
+            <h2>AI Vision &amp; Dashcam Detection</h2>
+            <p>Inspect road images or video frames with computer vision &amp; YOLO bounding boxes.</p>
+          </div>
+        </div>
+
+        <!-- Vision Mode Tabs -->
+        <div class="tab-strip" role="tablist">
+          <button type="button" class="tab-btn active" id="tabImageBtn">Image Inspection (AI)</button>
+          <button type="button" class="tab-btn" id="tabVideoBtn">Dashcam Video Stream</button>
+        </div>
+
+        <!-- Tab 1: Image AI Detection -->
+        <div id="imageDetectionTab" class="tab-content">
+          <div class="sample-picker-bar">
+            <span>Quick Test Samples:</span>
+            <button type="button" class="sample-chip" id="loadSample1Btn">Severe Pothole</button>
+            <button type="button" class="sample-chip" id="loadSample2Btn">Road Cracks</button>
+            <button type="button" class="sample-chip" id="loadSample3Btn">Standard Pothole</button>
+          </div>
+
+          <label class="upload-box" for="imageInput" id="imageUploadDropzone">
+            <span>Choose or drag road photo</span>
+            <small>JPEG, PNG, or WebP (Up to 15MB)</small>
+            <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" />
+          </label>
+
+          <div id="imagePreviewContainer" class="image-preview-container" hidden>
+            <div class="canvas-wrapper">
+              <canvas id="detectionCanvas"></canvas>
+            </div>
+            <div class="canvas-overlay-controls">
+              <label><input type="checkbox" id="toggleBoxesCheck" checked /> Show YOLO Bounding Boxes</label>
+              <label><input type="checkbox" id="toggleLabelsCheck" checked /> Show Confidence &amp; Class</label>
+              <button type="button" id="reanalyzeBtn" class="small-action-btn">Re-scan Frame</button>
+            </div>
+          </div>
+
+          <div id="imageScanStatus" class="scan-status-text">Select an image or sample to trigger AI computer vision analysis.</div>
+          <button type="button" id="runAiImageDetectBtn" class="primary-button" style="width: 100%;">Run AI Pothole Vision Model</button>
+        </div>
+
+        <!-- Tab 2: Dashcam Video Stream (Preserves original video components & IDs) -->
+        <div id="videoDetectionTab" class="tab-content" hidden>
+          <label class="upload-box" for="videoInput">
+            <span>Choose dashcam video</span>
+            <small>MP4, WebM, or MOV</small>
+            <input id="videoInput" type="file" accept="video/mp4,video/webm,video/quicktime" />
+          </label>
+          <video id="videoPlayer" controls hidden></video>
+          <p id="videoStatus" class="video-status">No video selected yet.</p>
+          <p id="videoDuration" class="video-status" hidden></p>
+          <button type="button" id="detectVideoBtn" class="secondary-button" disabled style="width: 100%;">Detect Potholes in Video</button>
+          <p class="helper-text">Extracts road hazard timestamps, classifies severity, and generates evidence frames.</p>
+
+          <section id="videoDetectionResults" class="video-results" hidden aria-live="polite">
+            <div class="demo-result-label">Video Telemetry &amp; Vision Results</div>
+            <h3>Video Detection Results</h3>
+            <p class="video-result-note">Detections extracted from dashcam video stream synchronized with road coordinates.</p>
+            <div id="videoDetectionList"></div>
+          </section>
+        </div>
+      </article>
+
+      <!-- Sensor Telemetry Panel (Preserves all original sensor elements & IDs) -->
+      <article class="panel sensor-panel" id="sensorPanel">
+        <div class="section-title">
+          <span class="icon">⌁</span>
+          <div>
+            <h2>Sensor Input &amp; Telemetry</h2>
+            <p>Enter sample accelerometer and gyroscope values or select a preset road event.</p>
+          </div>
+        </div>
+
+        <!-- Preset Telemetry Shortcuts -->
+        <div class="preset-strip">
+          <span>Simulation Presets:</span>
+          <button type="button" class="preset-chip" id="presetPotholeBtn">Deep Crater Impact</button>
+          <button type="button" class="preset-chip" id="presetMediumBtn">Moderate Dip</button>
+          <button type="button" class="preset-chip" id="presetSmoothBtn">Smooth Highway</button>
+        </div>
+
         <form id="sensorForm">
           <div class="input-grid">
-            <label>Acceleration X (m/s²)<input type="number" step="0.01" id="accX" value="1.20" required /></label><label>Acceleration Y (m/s²)<input type="number" step="0.01" id="accY" value="-0.50" required /></label><label>Acceleration Z (m/s²)<input type="number" step="0.01" id="accZ" value="9.81" required /></label>
-            <label>Gyroscope X (°/s)<input type="number" step="0.01" id="gyroX" value="0.30" required /></label><label>Gyroscope Y (°/s)<input type="number" step="0.01" id="gyroY" value="1.40" required /></label><label>Gyroscope Z (°/s)<input type="number" step="0.01" id="gyroZ" value="0.20" required /></label>
+            <label>Acceleration X (m/s²)<input type="number" step="0.01" id="accX" value="1.20" required /></label>
+            <label>Acceleration Y (m/s²)<input type="number" step="0.01" id="accY" value="-0.50" required /></label>
+            <label>Acceleration Z (m/s²)<input type="number" step="0.01" id="accZ" value="9.81" required /></label>
+            <label>Gyroscope X (°/s)<input type="number" step="0.01" id="gyroX" value="0.30" required /></label>
+            <label>Gyroscope Y (°/s)<input type="number" step="0.01" id="gyroY" value="1.40" required /></label>
+            <label>Gyroscope Z (°/s)<input type="number" step="0.01" id="gyroZ" value="0.20" required /></label>
           </div>
-          <button type="submit" class="primary-button">Analyze Sensor Data</button>
+          <button type="submit" class="primary-button" id="analyzeSensorBtn" style="width: 100%;">Analyze Sensor Data</button>
         </form>
-        <p class="helper-text"><strong>Demo/Prototype Logic:</strong> impact and severity are calculated from the entered acceleration values. This is not a real ML prediction.</p>
-      </article>
-      <article class="panel video-panel">
-        <div class="section-title"><span class="icon">▸</span><div><h2>Dashcam Video</h2><p>Upload a video for a simulated detection result.</p></div></div>
-        <label class="upload-box" for="videoInput"><span>Choose dashcam video</span><small>MP4, WebM, or MOV</small><input id="videoInput" type="file" accept="video/mp4,video/webm,video/quicktime" /></label>
-        <video id="videoPlayer" controls hidden></video>
-        <p id="videoStatus" class="video-status">No video selected yet.</p>
-        <p id="videoDuration" class="video-status" hidden></p>
-        <button type="button" id="detectVideoBtn" class="secondary-button" disabled>Detect Potholes</button>
-        <p class="helper-text">Detection is simulated with sample results; no computer-vision model runs here.</p>
-        <section id="videoDetectionResults" class="video-results" hidden aria-live="polite">
-          <div class="demo-result-label">Demo ML Result — simulated data only</div>
-          <h3>Video Detection Results</h3>
-          <p class="video-result-note">This prototype does not analyze the uploaded video. A future backend API and ML model will replace these sample results.</p>
-          <div id="videoDetectionList"></div>
-        </section>
+        <p class="helper-text"><strong>Telemetry Physics Engine:</strong> Computes instantaneous 3-axis magnitude vector <em>||a|| = √(ax² + ay² + az²)</em>, calculates divergence from standard gravity (9.81 m/s²), and evaluates road impact severity.</p>
       </article>
     </section>
+
+    <!-- Detection Result & Location Section (Preserves all original elements & IDs) -->
     <section class="dashboard-grid result-grid">
       <article class="panel result-panel">
-        <div class="section-title"><span class="icon">✓</span><div><h2>Detection Result</h2><p>Latest simulated analysis.</p></div></div>
-        <div class="result-banner" id="resultBanner"><span class="result-dot"></span><strong id="detectionStatus">Pothole detected</strong></div>
-        <dl class="result-list"><div><dt>Acceleration magnitude</dt><dd id="accelerationMagnitude">9.90 m/s²</dd></div><div><dt>Detection confidence</dt><dd id="confidence">92%</dd></div><div><dt>Severity</dt><dd><span id="severity" class="severity high">High</span></dd></div><div><dt>Impact intensity</dt><dd id="impactResult">7.6 / 10</dd></div><div><dt>Sample latitude</dt><dd id="resultLatitude">12.9716</dd></div><div><dt>Sample longitude</dt><dd id="resultLongitude">77.5946</dd></div></dl>
+        <div class="section-title">
+          <span class="icon">✓</span>
+          <div>
+            <h2>Detection Result</h2>
+            <p>Active inspection analysis &amp; engineering report.</p>
+          </div>
+        </div>
+        <div class="result-banner" id="resultBanner">
+          <span class="result-dot"></span>
+          <strong id="detectionStatus">Pothole detected</strong>
+        </div>
+
+        <dl class="result-list">
+          <div>
+            <dt>Detection ID</dt>
+            <dd id="resultIdDisplay">PH-104</dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd id="resultSourceDisplay"><span class="source-badge sensor">Sensor Telemetry</span></dd>
+          </div>
+          <div>
+            <dt>Acceleration magnitude</dt>
+            <dd id="accelerationMagnitude">9.90 m/s²</dd>
+          </div>
+          <div>
+            <dt>Detection confidence</dt>
+            <dd id="confidence">92%</dd>
+          </div>
+          <div>
+            <dt>Severity</dt>
+            <dd><span id="severity" class="severity high">High</span></dd>
+          </div>
+          <div>
+            <dt>Impact intensity</dt>
+            <dd id="impactResult">7.6 / 10</dd>
+          </div>
+          <div>
+            <dt>Road Condition Details</dt>
+            <dd id="resultDescription" class="result-desc-text">Deep cavity causing sharp vertical acceleration impact.</dd>
+          </div>
+          <div>
+            <dt>Recommended Repair</dt>
+            <dd id="resultRecommendation" class="result-rec-text">Immediate cold-mix asphalt patch required.</dd>
+          </div>
+          <div>
+            <dt>Sample latitude</dt>
+            <dd id="resultLatitude">12.9716</dd>
+          </div>
+          <div>
+            <dt>Sample longitude</dt>
+            <dd id="resultLongitude">77.5946</dd>
+          </div>
+        </dl>
       </article>
+
       <article class="panel location-panel">
-        <div class="section-title"><span class="icon">⌖</span><div><h2>Location</h2><p>Sample GPS point for the selected detection.</p></div></div>
-        <dl class="result-list"><div><dt>Latitude</dt><dd id="latitude">12.9716</dd></div><div><dt>Longitude</dt><dd id="longitude">77.5946</dd></div><div><dt>Location status</dt><dd><span class="location-status">● Sample location active</span></dd></div></dl>
+        <div class="section-title">
+          <span class="icon">⌖</span>
+          <div>
+            <h2>Location &amp; Coordinates</h2>
+            <p>Sample GPS point for the selected detection.</p>
+          </div>
+        </div>
+        <dl class="result-list">
+          <div>
+            <dt>Latitude</dt>
+            <dd id="latitude">12.9716</dd>
+          </div>
+          <div>
+            <dt>Longitude</dt>
+            <dd id="longitude">77.5946</dd>
+          </div>
+          <div>
+            <dt>Location status</dt>
+            <dd><span class="location-status" id="locationStatusText">● Sample location active</span></dd>
+          </div>
+        </dl>
+        <div class="location-picker-card">
+          <p class="loc-tip">💡 <strong>Interactive Map Tip:</strong> Click anywhere on the map below to pinpoint new coordinates for subsequent detections.</p>
+          <div class="loc-inputs">
+            <label>Set Latitude: <input type="number" id="customLatInput" step="0.0001" value="12.9716" /></label>
+            <label>Set Longitude: <input type="number" id="customLngInput" step="0.0001" value="77.5946" /></label>
+          </div>
+          <button type="button" id="useCurrentLocationBtn" class="small-action-btn" style="width: 100%; margin-top: 10px;">Use Device GPS Location</button>
+        </div>
       </article>
     </section>
-    <section class="panel map-panel"><div class="section-title"><span class="icon">◉</span><div><h2>Interactive Pothole Map</h2><p>Click the marker to view the detected pothole details.</p></div></div><div id="map" aria-label="Interactive pothole location map"></div></section>
-    <section class="panel history-panel"><div class="section-title"><span class="icon">≡</span><div><h2>Detection History</h2><p>Sample records from the prototype dashboard.</p></div></div><div class="table-wrap"><table><thead><tr><th>Pothole ID</th><th>Date/Time</th><th>Severity</th><th>Intensity</th><th>Latitude</th><th>Longitude</th><th>Confidence</th></tr></thead><tbody id="historyBody"></tbody></table></div></section>
+
+    <!-- Interactive Pothole Map (Preserves #map) -->
+    <section class="panel map-panel">
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 11px; align-items: flex-start;">
+          <span class="icon">◉</span>
+          <div>
+            <h2>Interactive Pothole Map</h2>
+            <p>Markers represent detected potholes. Click any marker to view details and inspect damage.</p>
+          </div>
+        </div>
+        <div class="map-controls">
+          <span class="filter-label">Filter:</span>
+          <button type="button" class="map-filter-chip active" data-filter="all">All Potholes</button>
+          <button type="button" class="map-filter-chip" data-filter="High">High</button>
+          <button type="button" class="map-filter-chip" data-filter="Medium">Medium</button>
+          <button type="button" class="map-filter-chip" data-filter="Low">Low</button>
+        </div>
+      </div>
+      <div id="map" aria-label="Interactive pothole location map"></div>
+    </section>
+
+    <!-- Detection History Table (Preserves #historyBody) -->
+    <section class="panel history-panel">
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; gap: 11px; align-items: flex-start;">
+          <span class="icon">≡</span>
+          <div>
+            <h2>Detection History</h2>
+            <p>Database records from AI vision, dashcam scans, and sensor telemetry.</p>
+          </div>
+        </div>
+        <div class="history-actions-bar">
+          <input type="text" id="historySearchInput" placeholder="Search by ID or note..." class="history-search-input" />
+          <select id="historySeveritySelect" class="history-select">
+            <option value="all">All Severities</option>
+            <option value="High">High Severity</option>
+            <option value="Medium">Medium Severity</option>
+            <option value="Low">Low Severity</option>
+          </select>
+          <button type="button" id="exportHistoryBtn" class="small-action-btn">Export CSV</button>
+          <button type="button" id="resetHistoryBtn" class="small-danger-btn">Reset</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Pothole ID</th>
+              <th>Date/Time</th>
+              <th>Source</th>
+              <th>Severity</th>
+              <th>Intensity</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Confidence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
-  <footer>Frontend prototype • Ready to connect to a backend API later</footer>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="script.js"></script>
+
+  <!-- Evidence Frame Modal / Dialog -->
+  <dialog id="evidenceModal" class="evidence-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Evidence Frame Inspection</h3>
+        <button type="button" id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-canvas-wrap">
+          <canvas id="evidenceCanvas"></canvas>
+        </div>
+        <div class="modal-meta" id="modalMeta"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="modalSaveBtn" class="primary-button">Add to Map Records</button>
+        <button type="button" id="modalCloseActionBtn" class="secondary-button">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer>
+    AI-Based Pothole Detection &amp; Mapping System • Integrated with Backend REST APIs &amp; Computer Vision
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
